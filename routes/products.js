@@ -7,7 +7,7 @@ const extractFile = require("../middleware/file");
 
 const router = express.Router();
 
-router.post("", checkAuth, /*extractFile,*/ ProductsController.createProduct);
+router.post("", checkAuth, extractFile, ProductsController.createProduct);
 
 router.get("", ProductsController.getProducts);
 
@@ -15,6 +15,9 @@ router.delete("/:id", checkAuth, ProductsController.deleteProduct);
 
 router.get("/:id", ProductsController.getProduct);
 
+router.put("/checkout", checkAuth, /*extractFile,*/ ProductsController.checkoutProducts);
+
 router.put("/:id", checkAuth, /*extractFile,*/ ProductsController.updateProduct);
+
 
 module.exports = router;

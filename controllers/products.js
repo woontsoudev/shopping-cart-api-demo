@@ -2,11 +2,12 @@ const Product = require("../models/product");
 
 exports.createProduct = (req, res, next) => {
   const url = req.protocol + "://" + req.get("host");
+  console.log(url)
   const product = new Product({
     name: req.body.name,
     detail: req.body.detail,
     creator: req.userData.userId,
-    quantity: req.body.quantity
+    quantity: req.body.quantity,
     // imagePath: url + "/images/" + req.file.filename,
   });
   product
@@ -15,8 +16,8 @@ exports.createProduct = (req, res, next) => {
       res.status(201).json({
         message: "Product added successfully",
         product: {
-          ...createdProduct,
-          id: createdProduct._id
+          ...createdProduct._doc,
+          _id: createdProduct._id
         }
       });
     })
@@ -56,6 +57,47 @@ exports.updateProduct = (req, res, next) => {
         message: "Couldn't udpate product!"
       });
     });
+};
+
+exports.checkoutProducts = (req, res, next) => {
+  let responseStatus;
+  req.body.forEach(product => {
+    let productQuantity = product.quantity - product.inCartQuantity;
+
+    let productToUpdate = new Product({
+      _id: product._id,
+      name: product.name,
+      detail: product.detail,
+      creator: product.userId,
+      quantity: product.quantity
+    });
+
+    Product.updateOne(
+      { _id: product._id, creator: req.userData.userId },
+      productToUpdate
+    )
+      .then(result => {
+        if (result.n > 0) {
+          responseStatus = 200;
+        } else {
+          responseStatus = 401;
+        }
+      })
+      .catch(error => {
+        responseStatus = 500;
+      });
+  });
+  switch (responseStatus) {
+    case 401:
+      res.status(401).json({ message: "Not authorized!" });
+    case 500:
+      res.status(500).json({
+        message: "Couldn't udpate product!"
+      });
+    default:
+      res.status(200).json({ message: "Update successful!" });
+      break;
+  }
 };
 
 exports.getProduct = (req, res, next) => {
